@@ -1,20 +1,57 @@
 
-function getQueryUrl(queryBy, routesKey, routesVal, apiKey) {
-  return 'https://realtime.mbta.com/developer/api/v2/' + queryBy + '?' + routesKey + '=' + routesVal + '&format=json&api_key=' + apiKey;
-}
-
+/////////// Constants
 var apiKey = 'SGED1xrcdUiBRkdRrq6zJQ';
-
-
 var redVehiclesUrl = getQueryUrl('vehiclesbyroutes', 'routes', 'Red', apiKey); 
 var redPredictionsUrl = getQueryUrl('predictionsbyroutes', 'routes', 'Red', apiKey);
 var redStopsUrl = getQueryUrl('stopsbyroute', 'route', 'Red', apiKey); 
 
-var north = 'Northbound';
-var south = 'Southbound';
-
+/////////// Vars initialized asynchronously
 var vehicles = [];
 var stops = [];
+var map; // Done in another script;
+var vehicleIdToMarker = {};
+
+/////////// Mbta  data initialization
+getAndUpdateVehiclesPosition();
+window.setInterval(getAndUpdateVehiclesPosition, 8000);
+
+function getAndUpdateVehiclesPosition() {
+  $.get(redVehiclesUrl, function(data, status, xhr){
+    vehicles = getVehicles(data);
+    onGoogleReady(function() {
+      addArrows(vehicles);      
+    });
+  }, 'json');
+}
+
+$.get(redStopsUrl, function(data) {
+  data.direction[0].stop.forEach(function(stop) {
+    stop.lat = parseFloat(stop.stop_lat);
+    stop.lng = parseFloat(stop.stop_lon);
+    stops.push(stop);
+  });
+  onGoogleReady(function() {
+    addMarkers(stops);
+  });
+}, 'json');
+
+/////////// Helpers 
+function onGoogleReady(callback) {
+  if (typeof google !== 'undefined') {
+    callback();
+  } else {
+    var job = window.setInterval(function() {
+      if (typeof google !== 'undefined') {
+        clearInterval(job);
+        callback();     
+      }
+      console.log('Google has gone from unready to ready!');
+    }, 300);
+  }    
+}
+function getQueryUrl(queryBy, routesKey, routesVal, apiKey) {
+  return 'https://realtime.mbta.com/developer/api/v2/' + queryBy + '?' + routesKey + '=' + routesVal + '&format=json&api_key=' + apiKey;
+}
 
 function getVehicles(vehiclesData) {
   vehicles = [];
@@ -23,7 +60,10 @@ function getVehicles(vehiclesData) {
       route['direction'].forEach(function(direction) {
         direction['trip'].forEach(function(trip) {
           var vehicle = trip.vehicle;
-          vehicle['direction'] = direction.direction_name;
+          vehicle.lat = parseFloat(vehicle.vehicle_lat);
+          vehicle.lng = parseFloat(vehicle.vehicle_lon);
+          vehicle.rotation = parseFloat(vehicle.vehicle_bearing);
+          vehicle.direction = direction.direction_name;
           vehicles.push(vehicle);
         });
       });
@@ -32,27 +72,46 @@ function getVehicles(vehiclesData) {
   return vehicles;
 }
 
-$.get(redStopsUrl, function(data) {
-  data.direction[0].stop.forEach(function(stop) {
-    stop.lat = parseFloat(stop.stop_lat);
-    stop.lng = parseFloat(stop.lng);
-    stops.push(stop);
-  });
-  stop = stops[1];
-  initMap(parseFloat(stop.stop_lat), parseFloat(stop.stop_lon));
-});
+function addMarkers(stops) {
+  stops.forEach(function(stop) {
+    new google.maps.Marker({
+      position: stop,
+      map: map
+    });
+  });   
+}
 
-$.get(redVehiclesUrl, function(data, status, xhr){
-  vehicles = getVehicles(data);
-}, 'json');
+function addArrows(vehicles) {
+  vehicles.forEach(function(vehicle) {
+    var arrow = {
+      path: 'M -5 15 L 5 15 L 0 0 z',
+      fillColor: 'red',
+      fillOpacity: 0.5,
+      scale: 1,
+      strokeColor: 'black',
+      strokeWeight: 1,
+      rotation: vehicle.rotation,
+    };
+    var marker = vehicleIdToMarker[vehicle.vehicle_id]
+    if (marker === undefined) {
+      vehicleIdToMarker[vehicle.vehicle_id] = new google.maps.Marker({
+        position: vehicle,
+        icon: arrow,
+        map: map
+      });
+    } else {
+      
+      marker.setPosition(vehicle);
+    }
+      
+  });   
+}
 
-/////////// Map
-var map;
 function initMap(latitude, longitude) {
   latitude = latitude || 42.39674;
   longitude = longitude || -71.121815;
   map = new google.maps.Map(document.getElementById('map'), {
     center: {lat: latitude, lng: longitude},
-    zoom: 15,
+    zoom: 14,
   });
 }
