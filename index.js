@@ -108,10 +108,10 @@ function addArrows(vehicles) {
 }
 
 function initMap(latitude, longitude) {
-  latitude = latitude || 42.39674;
-  longitude = longitude || -71.121815;
+  latitude = latitude || 42.391549;
+  longitude = longitude || -71.1249078;
   map = new google.maps.Map(document.getElementById('map'), {
     center: {lat: latitude, lng: longitude},
-    zoom: 14,
+    zoom: 13,
   });
 }
