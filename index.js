@@ -1,6 +1,6 @@
 
 function getQueryUrl(queryBy, routes, apiKey) {
-  return 'http://realtime.mbta.com/developer/api/v2/' + queryBy + '?routes=' + routes + '&format=json&api_key=' + apiKey;
+  return 'https://realtime.mbta.com/developer/api/v2/' + queryBy + '?routes=' + routes + '&format=json&api_key=' + apiKey;
 }
 
 var apiKey = 'SGED1xrcdUiBRkdRrq6zJQ';
