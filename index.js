@@ -82,7 +82,9 @@ function addMarkers(stops) {
 }
 
 function addArrows(vehicles) {
+  var currTime = (new Date()).getTime();
   vehicles.forEach(function(vehicle) {
+    var timeDiff = currTime / 1000 - parseInt(vehicle.vehicle_timestamp);
     var arrow = {
       path: 'M -5 15 L 5 15 L 0 0 z',
       fillColor: 'red',
@@ -97,13 +99,12 @@ function addArrows(vehicles) {
       vehicleIdToMarker[vehicle.vehicle_id] = new google.maps.Marker({
         position: vehicle,
         icon: arrow,
-        map: map
+        map: map,
+        label: timeDiff.toString(),
       });
     } else {
-      
       marker.setPosition(vehicle);
     }
-      
   });   
 }
 
