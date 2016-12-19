@@ -82,9 +82,9 @@ function addMarkers(stops) {
 }
 
 function addArrows(vehicles) {
-  var currTime = (new Date()).getTime();
+  var currTime = Math.floor((new Date()).getTime() / 1000);
   vehicles.forEach(function(vehicle) {
-    var timeDiff = currTime / 1000 - parseInt(vehicle.vehicle_timestamp);
+    var timeDiff = currTime - parseInt(vehicle.vehicle_timestamp);
     var arrow = {
       path: 'M -5 15 L 5 15 L 0 0 z',
       fillColor: 'red',
