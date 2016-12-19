@@ -76,7 +76,7 @@ function addMarkers(stops) {
   stops.forEach(function(stop) {
     new google.maps.Marker({
       position: stop,
-      map: map
+      map: map,
     });
   });   
 }
@@ -90,7 +90,7 @@ function addArrows(vehicles) {
       scale: 1,
       strokeColor: 'black',
       strokeWeight: 1,
-      rotation: vehicle.rotation,
+      rotation: vehicle.direction == 'Northbound' ? 0 : 180,
     };
     var marker = vehicleIdToMarker[vehicle.vehicle_id]
     if (marker === undefined) {
